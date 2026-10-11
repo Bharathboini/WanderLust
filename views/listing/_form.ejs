@@ -1,0 +1,28 @@
+<div class="mb-3">
+    <label class="form-label" for="title">Title</label>
+    <input id="title" class="form-control" name="listing[title]" value="<%= listing?.title || '' %>" required
+        maxlength="120" />
+</div>
+<div class="mb-3">
+    <label class="form-label" for="description">Description</label><textarea id="description" class="form-control"
+        name="listing[description]" rows="4" required>
+<%= listing?.description || '' %></textarea>
+</div>
+<div class="mb-3">
+    <label class="form-label" for="image">Image URL (optional)</label><input id="image" type="url" class="form-control"
+        name="listing[image][url]" value="<%= listing?.image?.url || '' %>" />
+</div>
+<div class="row">
+    <div class="col-md-4 mb-3">
+        <label class="form-label" for="price">Price per night (₹)</label><input id="price" type="number" min="0"
+            class="form-control" name="listing[price]" value="<%= listing?.price ?? '' %>" required />
+    </div>
+    <div class="col-md-4 mb-3">
+        <label class="form-label" for="location">Location</label><input id="location" class="form-control"
+            name="listing[location]" value="<%= listing?.location || '' %>" required />
+    </div>
+    <div class="col-md-4 mb-3">
+        <label class="form-label" for="country">Country</label><input id="country" class="form-control"
+            name="listing[country]" value="<%= listing?.country || '' %>" required />
+    </div>
+</div>

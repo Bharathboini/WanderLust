@@ -1,0 +1,835 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+init/
+  data.js
+  index.js
+MODELS/
+  listings.js
+  review.js
+  user.js
+public/
+  css/
+    style.css
+  js/
+    script.js
+routes/
+  api.js
+  auth.js
+  listings.js
+  reviews.js
+utils/
+  ExpressError.js
+  wrapAsync.js
+views/
+  includes/
+    footer.ejs
+    navBar.ejs
+  layouts/
+    boilerplate.ejs
+  listing/
+    _form.ejs
+    edit.ejs
+    Error.ejs
+    index.ejs
+    new.ejs
+    show.ejs
+  users/
+    login.ejs
+    register.ejs
+  home.ejs
+.gitignore
+app.js
+middleware.js
+package.json
+Procfile
+README.md
+schema.js
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="init/data.js">
+const data = [
+  {
+    title: "Cozy Beachfront Cottage",
+    description:
+      "A bright cottage steps from the shore, with ocean views and space to unwind.",
+    image: {
+      url: "https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?auto=format&fit=crop&w=1200&q=80",
+    },
+    price: 1500,
+    location: "Malibu",
+    country: "United States",
+  },
+  {
+    title: "Modern Loft in Downtown",
+    description:
+      "A comfortable, sunlit loft close to restaurants, museums, and transit.",
+    image: {
+      url: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=1200&q=80",
+    },
+    price: 1200,
+    location: "New York City",
+    country: "United States",
+  },
+  {
+    title: "Mountain Retreat",
+    description:
+      "Unplug in a peaceful cabin surrounded by mountain trails and fresh air.",
+    image: {
+      url: "https://unsplash.com/photos/person-with-backpack-by-forest-lake-NwmR1EDtiFg",
+    },
+    price: 1000,
+    location: "Aspen",
+    country: "United States",
+  },
+  {
+    title: "Historic Villa in Tuscany",
+    description:
+      "A restored villa among rolling hills, vineyards, and beautiful villages.",
+    image: {
+      url: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1200&q=80",
+    },
+    price: 2500,
+    location: "Florence",
+    country: "Italy",
+  },
+  {
+    title: "Secluded Treehouse Getaway",
+    description: "A quiet treetop escape for slow mornings and nature walks.",
+    image: {
+      url: "https://unsplash.com/photos/brown-wooden-house-near-green-trees-during-daytime-m2xsYNcu2jw",
+    },
+    price: 800,
+    location: "Portland",
+    country: "United States",
+  },
+  {
+    title: "Beachfront Paradise",
+    description:
+      "Wake up beside turquoise water in this breezy coastal apartment.",
+    image: {
+      url: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1200&q=80",
+    },
+    price: 2000,
+    location: "Cancun",
+    country: "Mexico",
+  },
+  {
+    title: "Rustic Cabin by the Lake",
+    description:
+      "A warm lakeside cabin with room for paddling, fishing, and relaxing.",
+    image: {
+      url: "https://unsplash.com/photos/a-tree-house-sitting-on-top-of-a-lush-green-field-A5sQyvQWNak",
+    },
+    price: 900,
+    location: "Lake Tahoe",
+    country: "United States",
+  },
+  {
+    title: "Tropical Villa in Phuket",
+    description: "A private pool villa tucked into lush tropical gardens.",
+    image: {
+      url: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80",
+    },
+    price: 3000,
+    location: "Phuket",
+    country: "Thailand",
+  },
+];
+module.exports = { data };
+</file>
+
+<file path="init/index.js">
+require("dotenv").config();
+const mongoose = require("mongoose");
+const Listing = require("../MODELS/listings");
+const { data } = require("./data");
+(async () => {
+  const uri = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/wanderlust";
+  await mongoose.connect(uri);
+  await Listing.deleteMany({});
+  await Listing.insertMany(data.map((listing) => ({ ...listing, owner: undefined })));
+  console.log(`Seeded ${data.length} listings.`);
+  await mongoose.disconnect();
+})().catch((err) => { console.error(err); process.exit(1); });
+</file>
+
+<file path="MODELS/listings.js">
+const mongoose = require("mongoose");
+const Review = require("./review");
+const listingSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    description: { type: String, required: true },
+    image: {
+      filename: { type: String, default: "listingimage" },
+      url: {
+        type: String,
+        default: "https://images.unsplash.com/photo-1552733407-5d5c46c3bb3b",
+      },
+    },
+    price: { type: Number, required: true, min: 0 },
+    location: { type: String, required: true },
+    country: { type: String, required: true },
+    owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: "Review" }],
+  },
+  { timestamps: true },
+);
+listingSchema.post("findOneAndDelete", async (listing) => {
+  if (listing) await Review.deleteMany({ _id: { $in: listing.reviews } });
+});
+module.exports = mongoose.model("Listing", listingSchema);
+</file>
+
+<file path="MODELS/review.js">
+const mongoose = require("mongoose");
+const reviewSchema = new mongoose.Schema({
+  comment: { type: String, required: true },
+  rating: { type: Number, min: 1, max: 5, required: true },
+  createdAt: { type: Date, default: Date.now },
+  author: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+});
+module.exports = mongoose.model("Review", reviewSchema);
+</file>
+
+<file path="MODELS/user.js">
+const mongoose = require("mongoose");
+const passportLocalMongoose = require("passport-local-mongoose");
+
+const userSchema = new mongoose.Schema(
+  {
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+  },
+  { timestamps: true },
+);
+userSchema.plugin(passportLocalMongoose, {
+  usernameField: "username",
+  usernameLowerCase: true,
+});
+module.exports = mongoose.model("User", userSchema);
+</file>
+
+<file path="public/css/style.css">
+:root {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  color: #222;
+}
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+main {
+  width: 100%;
+}
+.navbar {
+  min-height: 68px;
+}
+.navbar-brand {
+  font-size: 1.35rem;
+}
+.hero {
+  background:
+    linear-gradient(110deg, rgba(20, 31, 36, 0.77), rgba(20, 31, 36, 0.1)),
+    url("https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&w=1800&q=85")
+      center/cover;
+  color: white;
+  min-height: 390px;
+  display: flex;
+  align-items: center;
+}
+.hero .lead {
+  max-width: 38rem;
+}
+.listing-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.stay-card {
+  border: 0;
+}
+.stay-card img {
+  width: 100%;
+  height: 230px;
+  object-fit: cover;
+  border-radius: 14px;
+}
+.stay-card:hover img {
+  filter: brightness(0.95);
+}
+.detail-image {
+  width: 100%;
+  max-height: 560px;
+  object-fit: cover;
+}
+footer {
+  background: #f7f7f7;
+}
+.btn-danger {
+  background: #e5485d;
+  border-color: #e5485d;
+}
+.btn-danger:hover {
+  background: #cf354a;
+  border-color: #cf354a;
+}
+@media (max-width: 575px) {
+  .hero {
+    min-height: 320px;
+  }
+  .stay-card img {
+    height: 260px;
+  }
+}
+</file>
+
+<file path="public/js/script.js">
+document.querySelectorAll("form").forEach((form) =>
+  form.addEventListener("submit", () => {
+    const button = form.querySelector(
+      'button[type="submit"],button:not([type])',
+    );
+    if (button && form.checkValidity()) {
+      button.disabled = true;
+      button.dataset.originalText = button.textContent;
+      button.textContent = "Please wait…";
+    }
+  }),
+);
+</file>
+
+<file path="routes/api.js">
+const express = require("express");
+const Listing = require("../MODELS/listings");
+const { requireJwt } = require("../middleware");
+const { listingSchema } = require("../schema");
+const ExpressError = require("../utils/ExpressError");
+const router = express.Router();
+router.get("/listings", async (req, res, next) => {
+  try { res.json(await Listing.find().populate("owner", "username")); } catch (err) { next(err); }
+});
+router.post("/listings", requireJwt, async (req, res, next) => {
+  try {
+    const input = req.body.listing ? req.body : { listing: req.body };
+    const { error } = listingSchema.validate(input);
+    if (error) throw new ExpressError(400, error.details[0].message);
+    const listing = new Listing(input.listing);
+    listing.owner = req.apiUser.sub;
+    await listing.save(); res.status(201).json(listing);
+  } catch (err) { next(err); }
+});
+module.exports = router;
+</file>
+
+<file path="routes/auth.js">
+const express = require("express");
+const passport = require("passport");
+const jwt = require("jsonwebtoken");
+const User = require("../MODELS/user");
+const { requireLogin } = require("../middleware");
+const router = express.Router();
+
+router.get("/register", (req, res) => res.render("users/register"));
+router.post("/register", async (req, res, next) => {
+  try {
+    const { username, email, password } = req.body;
+    const user = await User.register(new User({ username, email }), password);
+    req.login(user, (err) => {
+      if (err) return next(err);
+      req.flash("success", "Welcome to Wanderlust!");
+      res.redirect("/listings");
+    });
+  } catch (err) { req.flash("error", err.message); res.redirect("/register"); }
+});
+
+router.get("/login", (req, res) => res.render("users/login"));
+router.post("/login", passport.authenticate("local", { failureRedirect: "/login", failureFlash: true }), (req, res) => {
+  req.flash("success", `Welcome back, ${req.user.username}!`);
+  const destination = req.session.returnTo || "/listings";
+  delete req.session.returnTo;
+  res.redirect(destination);
+});
+router.post("/logout", requireLogin, (req, res, next) => req.logout((err) => {
+  if (err) return next(err);
+  req.flash("success", "You have signed out."); res.redirect("/listings");
+}));
+
+// Exchange valid local credentials for a short-lived bearer token for JSON clients.
+router.post("/api/auth/token", (req, res, next) => passport.authenticate("local", { session: false }, (err, user) => {
+  if (err) return next(err);
+  if (!user) return res.status(401).json({ error: "Invalid username or password." });
+  const token = jwt.sign({ sub: String(user._id), username: user.username }, process.env.JWT_SECRET, { expiresIn: "1h" });
+  res.json({ token, tokenType: "Bearer", expiresIn: 3600 });
+})(req, res, next));
+router.get("/api/auth/me", requireLogin, (req, res) => res.json({ id: req.user._id, username: req.user.username, email: req.user.email }));
+
+module.exports = router;
+</file>
+
+<file path="routes/listings.js">
+const express = require("express");
+const Listing = require("../MODELS/listings");
+const { listingSchema } = require("../schema");
+const { requireLogin, requireOwner } = require("../middleware");
+const ExpressError = require("../utils/ExpressError");
+const wrapAsync = require("../utils/wrapAsync");
+const router = express.Router();
+
+const validateListing = (req, res, next) => {
+  const { error } = listingSchema.validate(req.body);
+  if (error) return next(new ExpressError(400, error.details.map((d) => d.message).join(", ")));
+  next();
+};
+const loadListing = wrapAsync(async (req, res, next) => {
+  const listing = await Listing.findById(req.params.id).populate({ path: "reviews", populate: { path: "author", select: "username" } }).populate("owner", "username");
+  if (!listing) return next(new ExpressError(404, "Listing not found."));
+  res.locals.currentListing = listing;
+  next();
+});
+
+router.route("/")
+  .get(wrapAsync(async (req, res) => res.render("listing/index", { allListings: await Listing.find().populate("owner", "username") })))
+  .post(requireLogin, validateListing, wrapAsync(async (req, res) => {
+    const listing = new Listing(req.body.listing);
+    listing.owner = req.user._id;
+    await listing.save(); req.flash("success", "Your listing is live!"); res.redirect(`/listings/${listing._id}`);
+  }));
+
+router.get("/new", requireLogin, (req, res) => res.render("listing/new"));
+router.get("/:id/edit", loadListing, requireLogin, requireOwner, (req, res) => res.render("listing/edit", { editListing: res.locals.currentListing }));
+router.get("/:id", loadListing, (req, res) => res.render("listing/show", { singleListing: res.locals.currentListing }));
+router.put("/:id", loadListing, requireLogin, requireOwner, validateListing, wrapAsync(async (req, res) => {
+  const listing = res.locals.currentListing;
+  Object.assign(listing, req.body.listing);
+  await listing.save(); req.flash("success", "Listing updated."); res.redirect(`/listings/${listing._id}`);
+}));
+router.delete("/:id", loadListing, requireLogin, requireOwner, wrapAsync(async (req, res) => {
+  await Listing.findByIdAndDelete(req.params.id); req.flash("success", "Listing deleted."); res.redirect("/listings");
+}));
+
+module.exports = router;
+</file>
+
+<file path="routes/reviews.js">
+const express = require("express");
+const Listing = require("../MODELS/listings");
+const Review = require("../MODELS/review");
+const { requireLogin } = require("../middleware");
+const wrapAsync = require("../utils/wrapAsync");
+const ExpressError = require("../utils/ExpressError");
+const { reviewSchema } = require("../schema");
+const router = express.Router({ mergeParams: true });
+router.post("/", requireLogin, wrapAsync(async (req, res) => {
+  const { error } = reviewSchema.validate(req.body); if (error) throw new ExpressError(400, error.details[0].message);
+  const listing = await Listing.findById(req.params.id); if (!listing) throw new ExpressError(404, "Listing not found.");
+  const review = new Review(req.body.review); review.author = req.user._id; listing.reviews.push(review);
+  await review.save(); await listing.save(); req.flash("success", "Thanks for your review!"); res.redirect(`/listings/${listing._id}`);
+}));
+router.delete("/:reviewId", requireLogin, wrapAsync(async (req, res) => {
+  const review = await Review.findById(req.params.reviewId); if (!review) throw new ExpressError(404, "Review not found.");
+  if (String(review.author) !== String(req.user._id)) throw new ExpressError(403, "You can only delete your own reviews.");
+  await Listing.findByIdAndUpdate(req.params.id, { $pull: { reviews: review._id } }); await review.deleteOne();
+  req.flash("success", "Review deleted."); res.redirect(`/listings/${req.params.id}`);
+}));
+module.exports = router;
+</file>
+
+<file path="utils/ExpressError.js">
+class ExpressError extends Error {
+  constructor(statusCode, message) {
+    super(message);
+    this.statusCode = statusCode;
+  }
+}
+module.exports = ExpressError;
+</file>
+
+<file path="utils/wrapAsync.js">
+module.exports = (fn) => (req, res, next) =>
+  Promise.resolve(fn(req, res, next)).catch(next);
+</file>
+
+<file path="views/includes/footer.ejs">
+<footer class="border-top py-4 text-center text-secondary">
+  <div>
+    © <%= new Date().getFullYear() %> Wanderlust · Find a place to belong.
+  </div>
+</footer>
+</file>
+
+<file path="views/includes/navBar.ejs">
+<nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top">
+    <div class="container"><a class="navbar-brand fw-bold text-danger" href="/">✦ Wanderlust</a><button
+            class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#nav"><span
+                class="navbar-toggler-icon"></span></button>
+        <div id="nav" class="collapse navbar-collapse">
+            <div class="navbar-nav me-auto"><a class="nav-link" href="/listings">Explore stays</a>
+                <% if (currentUser) { %><a class="nav-link" href="/listings/new">List your place</a>
+                    <% } %>
+            </div>
+            <div class="navbar-nav align-items-lg-center">
+                <% if (currentUser) { %><span class="nav-link">Hi, <%= currentUser.username %></span>
+                    <form method="post" action="/logout"><button class="btn btn-outline-dark btn-sm">Sign out</button>
+                    </form>
+                    <% } else { %><a class="nav-link" href="/login">Log in</a><a class="btn btn-dark btn-sm"
+                            href="/register">Sign up</a>
+                        <% } %>
+            </div>
+        </div>
+    </div>
+</nav>
+</file>
+
+<file path="views/layouts/boilerplate.ejs">
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>
+        <%= typeof title !=='undefined' ? title : 'Wanderlust' %>
+    </title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body><%- include('../includes/navBar') %>
+        <main class="container py-4 flex-grow-1">
+            <% for (const msg of success || []) { %>
+                <div class="alert alert-success">
+                    <%= msg %>
+                </div>
+                <% } %>
+                    <% for (const msg of error || []) { %>
+                        <div class="alert alert-danger">
+                            <%= msg %>
+                        </div>
+                        <% } %><%- body %>
+        </main><%- include('../includes/footer') %>
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+            <script src="/js/script.js"></script>
+</body>
+
+</html>
+</file>
+
+<file path="views/listing/_form.ejs">
+<div class="mb-3"><label class="form-label" for="title">Title</label><input id="title" class="form-control" name="listing[title]" value="<%= listing?.title || '' %>" required maxlength="120"></div><div class="mb-3"><label class="form-label" for="description">Description</label><textarea id="description" class="form-control" name="listing[description]" rows="4" required><%= listing?.description || '' %></textarea></div><div class="mb-3"><label class="form-label" for="image">Image URL (optional)</label><input id="image" type="url" class="form-control" name="listing[image][url]" value="<%= listing?.image?.url || '' %>"></div><div class="row"><div class="col-md-4 mb-3"><label class="form-label" for="price">Price per night (₹)</label><input id="price" type="number" min="0" class="form-control" name="listing[price]" value="<%= listing?.price ?? '' %>" required></div><div class="col-md-4 mb-3"><label class="form-label" for="location">Location</label><input id="location" class="form-control" name="listing[location]" value="<%= listing?.location || '' %>" required></div><div class="col-md-4 mb-3"><label class="form-label" for="country">Country</label><input id="country" class="form-control" name="listing[country]" value="<%= listing?.country || '' %>" required></div></div>
+</file>
+
+<file path="views/listing/edit.ejs">
+<% layout('/layouts/boilerplate') -%><div class="row justify-content-center"><div class="col-lg-8"><h1 class="h2 mb-4">Edit your listing</h1><form method="post" action="/listings/<%= editListing._id %>?_method=PUT"><%- include('_form', { listing: editListing }) %><button class="btn btn-dark rounded-pill px-4">Save changes</button></form></div></div>
+</file>
+
+<file path="views/listing/Error.ejs">
+<% layout('/layouts/boilerplate') -%><div class="alert alert-danger mt-4"><h1 class="h4">Error <%= err.statusCode %></h1><p class="mb-0"><%= err.message %></p></div><a href="/listings">Back to listings</a>
+</file>
+
+<file path="views/listing/index.ejs">
+<% layout('/layouts/boilerplate') -%>
+<div class="d-flex justify-content-between align-items-center mb-4"><div><h1 class="h2 mb-1">Explore stays</h1><p class="text-secondary mb-0">Find a place for your next trip.</p></div><% if (currentUser) { %><a class="btn btn-dark rounded-pill" href="/listings/new">+ Add a listing</a><% } %></div><div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4"><% for (const listing of allListings) { %><div class="col"><a class="listing-link" href="/listings/<%= listing._id %>"><article class="card stay-card h-100"><img src="<%= listing.image?.url || 'https://images.unsplash.com/photo-1552733407-5d5c46c3bb3b' %>" class="card-img-top" alt="<%= listing.title %>"><div class="card-body px-0"><h2 class="h6 mb-1"><%= listing.title %></h2><p class="small text-secondary mb-1"><%= listing.location %>, <%= listing.country %></p><p class="mb-0"><strong>₹<%= listing.price.toLocaleString('en-IN') %></strong> <span class="text-secondary">night</span></p></div></article></a></div><% } %></div><% if (!allListings.length) { %><div class="alert alert-light">No stays yet. Sign in to add the first one.</div><% } %>
+</file>
+
+<file path="views/listing/new.ejs">
+<% layout('/layouts/boilerplate') -%><div class="row justify-content-center"><div class="col-lg-8"><h1 class="h2 mb-4">List your place</h1><form method="post" action="/listings"><%- include('_form', { listing: null }) %><button class="btn btn-danger rounded-pill px-4">Publish listing</button></form></div></div>
+</file>
+
+<file path="views/listing/show.ejs">
+<% layout('/layouts/boilerplate') -%><div class="row justify-content-center"><div class="col-lg-9"><img class="detail-image rounded-4 mb-4" src="<%= singleListing.image?.url %>" alt="<%= singleListing.title %>"><div class="d-flex justify-content-between align-items-start"><div><h1 class="h2"><%= singleListing.title %></h1><p class="text-secondary"><%= singleListing.location %>, <%= singleListing.country %> · Hosted by <%= singleListing.owner?.username || 'Wanderlust host' %></p></div><% if (currentUser && singleListing.owner && String(currentUser._id) === String(singleListing.owner._id)) { %><div class="d-flex gap-2"><a class="btn btn-outline-dark" href="/listings/<%= singleListing._id %>/edit">Edit</a><form method="post" action="/listings/<%= singleListing._id %>?_method=DELETE" onsubmit="return confirm('Delete this listing?')"><button class="btn btn-outline-danger">Delete</button></form></div><% } %></div><p><%= singleListing.description %></p><h3 class="h5">₹<%= singleListing.price.toLocaleString('en-IN') %> <small class="text-secondary fw-normal">per night</small></h3><hr><h2 class="h4">Reviews</h2><% if (currentUser) { %><form class="card card-body mb-4" method="post" action="/listings/<%= singleListing._id %>/reviews"><label class="form-label" for="rating">Your rating</label><select id="rating" class="form-select mb-3" name="review[rating]" required><option value="">Choose a rating</option><% for(let i=5;i>=1;i--){ %><option value="<%= i %>"><%= i %> stars</option><% } %></select><label class="form-label" for="comment">Your review</label><textarea id="comment" class="form-control mb-3" name="review[comment]" required></textarea><button class="btn btn-dark align-self-start">Submit review</button></form><% } else { %><p><a href="/login">Sign in</a> to leave a review.</p><% } %><div class="row g-3"><% for(const review of singleListing.reviews){ %><div class="col-md-6"><article class="card h-100"><div class="card-body"><strong><%= review.author?.username || 'Guest' %></strong><div class="text-warning"><%= '★'.repeat(review.rating) %><%= '☆'.repeat(5-review.rating) %></div><p class="mb-2 mt-2"><%= review.comment %></p><% if(currentUser && review.author && String(currentUser._id) === String(review.author._id)){ %><form method="post" action="/listings/<%= singleListing._id %>/reviews/<%= review._id %>?_method=DELETE"><button class="btn btn-link btn-sm text-danger p-0">Delete review</button></form><% } %></div></article></div><% } %></div></div></div>
+</file>
+
+<file path="views/users/login.ejs">
+<% layout('/layouts/boilerplate') -%>
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <h1 class="h2 mb-4">Welcome back</h1>
+            <form method="post" action="/login"><label class="form-label" for="username">Username</label><input
+                    id="username" class="form-control mb-3" name="username" required autocomplete="username"><label
+                    class="form-label" for="password">Password</label><input id="password" type="password"
+                    class="form-control mb-4" name="password" required autocomplete="current-password"><button
+                    class="btn btn-dark rounded-pill w-100">Log in</button></form>
+            <p class="mt-3">New to Wanderlust? <a href="/register">Create an account</a></p>
+        </div>
+    </div>
+</file>
+
+<file path="views/users/register.ejs">
+<% layout('/layouts/boilerplate') -%>
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <h1 class="h2 mb-4">Create your account</h1>
+            <form method="post" action="/register"><label class="form-label" for="username">Username</label><input
+                    id="username" class="form-control mb-3" name="username" required minlength="3"
+                    autocomplete="username"><label class="form-label" for="email">Email</label><input id="email"
+                    type="email" class="form-control mb-3" name="email" required autocomplete="email"><label
+                    class="form-label" for="password">Password</label><input id="password" type="password"
+                    class="form-control mb-4" name="password" required minlength="8" autocomplete="new-password"><button
+                    class="btn btn-danger rounded-pill w-100">Sign up</button></form>
+            <p class="mt-3">Already registered? <a href="/login">Log in</a></p>
+        </div>
+    </div>
+</file>
+
+<file path="views/home.ejs">
+<% layout('/layouts/boilerplate') -%>
+    <section class="hero rounded-4 p-4 p-md-5 mb-5">
+        <div class="col-lg-7"><span class="badge text-bg-light mb-3">Stay somewhere memorable</span>
+            <h1 class="display-4 fw-bold">Find your next<br>great escape.</h1>
+            <p class="lead">Explore one-of-a-kind homes, hosted by people who know their place best.</p><a
+                class="btn btn-danger btn-lg rounded-pill px-4" href="/listings">Explore stays</a>
+        </div>
+    </section>
+    <div class="d-flex justify-content-between align-items-center">
+        <h2 class="h4">Discover Wanderlust</h2><span class="text-secondary">
+            <%= listingCount %> stays to explore
+        </span>
+    </div>
+</file>
+
+<file path=".gitignore">
+node_modules/
+.env
+npm-debug.log*
+.DS_Store
+</file>
+
+<file path="app.js">
+require("dotenv").config();
+const express = require("express");
+const mongoose = require("mongoose");
+const path = require("path");
+const session = require("express-session");
+const MongoStore = require("connect-mongo");
+const flash = require("connect-flash");
+const passport = require("passport");
+const LocalStrategy = require("passport-local");
+const methodOverride = require("method-override");
+const helmet = require("helmet");
+const User = require("./MODELS/user");
+const Listing = require("./MODELS/listings");
+const authRoutes = require("./routes/auth");
+const listingRoutes = require("./routes/listings");
+const reviewRoutes = require("./routes/reviews");
+const apiRoutes = require("./routes/api");
+const ExpressError = require("./utils/ExpressError");
+const wrapAsync = require("./utils/wrapAsync");
+
+const app = express();
+const port = process.env.PORT || 8080;
+const mongoUrl = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/wanderlust";
+if (!process.env.SESSION_SECRET || !process.env.JWT_SECRET) throw new Error("Set SESSION_SECRET and JWT_SECRET in the environment.");
+
+app.engine("ejs", require("ejs-mate"));
+app.set("view engine", "ejs"); app.set("views", path.join(__dirname, "views"));
+app.set("trust proxy", 1);
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(express.static(path.join(__dirname, "public")));
+app.use(express.urlencoded({ extended: true })); app.use(express.json());
+app.use(methodOverride("_method"));
+app.use(session({
+  name: "wanderlust.sid", secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: false,
+  store: MongoStore.create({ mongoUrl, collectionName: "sessions", ttl: 14 * 24 * 60 * 60 }),
+  cookie: { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", maxAge: 14 * 24 * 60 * 60 * 1000 }
+}));
+app.use(flash());
+app.use(passport.initialize()); app.use(passport.session());
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser()); passport.deserializeUser(User.deserializeUser());
+app.use((req, res, next) => {
+  res.locals.currentUser = req.user;
+  res.locals.success = req.flash("success"); res.locals.error = req.flash("error");
+  next();
+});
+
+app.get("/", wrapAsync(async (req, res) => res.render("home", { listingCount: await Listing.countDocuments() })));
+app.use(authRoutes);
+app.use("/listings", listingRoutes);
+app.use("/listings/:id/reviews", reviewRoutes);
+app.use("/api", apiRoutes);
+app.use((req, res, next) => next(new ExpressError(404, "Page not found.")));
+app.use((err, req, res, next) => {
+  const status = err.statusCode || 500;
+  if (req.originalUrl.startsWith("/api/")) return res.status(status).json({ error: status === 500 ? "Internal server error." : err.message });
+  res.status(status).render("listing/Error", { err: { statusCode: status, message: status === 500 ? "Something went wrong." : err.message } });
+});
+
+mongoose.connect(mongoUrl).then(() => {
+  console.log("Connected to MongoDB");
+  app.listen(port, () => console.log(`Wanderlust listening on port ${port}`));
+}).catch((err) => { console.error("MongoDB connection failed:", err.message); process.exit(1); });
+</file>
+
+<file path="middleware.js">
+const jwt = require("jsonwebtoken");
+const ExpressError = require("./utils/ExpressError");
+
+function requireLogin(req, res, next) {
+  if (!req.isAuthenticated()) {
+    req.session.returnTo = req.originalUrl;
+    req.flash("error", "Please sign in to continue.");
+    return res.redirect("/login");
+  }
+  next();
+}
+
+function requireOwner(req, res, next) {
+  if (!req.user || String(req.user._id) !== String(res.locals.currentListing?.owner)) {
+    return next(new ExpressError(403, "You can only change listings you created."));
+  }
+  next();
+}
+
+function requireJwt(req, res, next) {
+  const token = (req.get("authorization") || "").replace(/^Bearer\s+/i, "");
+  if (!token) return res.status(401).json({ error: "A bearer token is required." });
+  try {
+    req.apiUser = jwt.verify(token, process.env.JWT_SECRET);
+    next();
+  } catch {
+    res.status(401).json({ error: "The token is invalid or expired." });
+  }
+}
+
+module.exports = { requireLogin, requireOwner, requireJwt };
+</file>
+
+<file path="package.json">
+{
+  "name": "wanderlust",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Responsive property listings app built with Express, EJS and MongoDB",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node --watch app.js",
+    "seed": "node init/index.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "connect-flash": "^0.1.1",
+    "connect-mongo": "^5.1.0",
+    "dotenv": "^16.6.1",
+    "ejs": "^3.1.10",
+    "ejs-mate": "^4.0.0",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "helmet": "^8.0.0",
+    "joi": "^17.13.3",
+    "jsonwebtoken": "^9.0.2",
+    "method-override": "^3.0.0",
+    "mongoose": "^8.9.5",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0",
+    "passport-local-mongoose": "^8.0.0"
+  }
+}
+</file>
+
+<file path="Procfile">
+web: npm start
+</file>
+
+<file path="README.md">
+# Wanderlust
+
+A responsive property listing app built with Node.js, Express, EJS, MongoDB, Bootstrap, Passport.js, and JWT.
+
+## Run locally
+
+1. Install Node.js and run `npm install`.
+2. Copy `.env.example` to `.env`, set `MONGODB_URI`, and replace both secrets with long random values.
+3. Start MongoDB locally, then run `npm run seed` to load example listings (optional).
+4. Run `npm run dev` and open `http://localhost:8080`.
+
+Registration and login use Passport Local with MongoDB-backed sessions. Signed-in users can create listings and reviews; only listing owners can edit/delete their listings, and only review authors can delete their reviews.
+
+## JSON API
+
+- `GET /api/listings` returns public listings.
+- `POST /api/auth/token` accepts `{ "username": "...", "password": "..." }` and returns a one-hour JWT.
+- `POST /api/listings` requires `Authorization: Bearer <token>` and a listing JSON object (or `{ "listing": { ... } }`).
+
+## Deploy to Render
+
+Create a Render Web Service from this repository, set the build command to `npm install` and the start command to `npm start`. Configure `MONGODB_URI` with a reachable MongoDB Atlas URI, plus unique random `SESSION_SECRET` and `JWT_SECRET` values, and set `NODE_ENV=production`. Render supplies `PORT` automatically. The app uses secure, HTTP-only session cookies in production and stores sessions in MongoDB, so it works across service restarts and instances.
+</file>
+
+<file path="schema.js">
+const Joi = require("joi");
+module.exports.listingSchema = Joi.object({
+  listing: Joi.object({
+    title: Joi.string().trim().required(),
+    description: Joi.string().required(),
+    country: Joi.string().required(),
+    price: Joi.number().min(0).required(),
+    location: Joi.string().required(),
+    image: Joi.object({ url: Joi.string().uri().allow("") }).unknown(true),
+  })
+    .unknown(false)
+    .required(),
+});
+module.exports.reviewSchema = Joi.object({
+  review: Joi.object({
+    rating: Joi.number().integer().min(1).max(5).required(),
+    comment: Joi.string().trim().required(),
+  }).required(),
+});
+</file>
+
+</files>

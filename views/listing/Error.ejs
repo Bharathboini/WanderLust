@@ -1,0 +1,8 @@
+<% layout('/layouts/boilerplate') -%>
+    <div class="alert alert-danger mt-4">
+        <h1 class="h4">Error <%= err.statusCode %>
+        </h1>
+        <p class="mb-0">
+            <%= err.message %>
+        </p>
+    </div><a href="/listings">Back to listings</a>
